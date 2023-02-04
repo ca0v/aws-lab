@@ -20,6 +20,7 @@ Here I track my learning progress in Amazon Web Services.
 * Got access to the database from my local desktop
 * Was able to programmatically create a table and insert data into it
 * Not sure where to put DB credentials
+* [this test](http://localhost:3000/api) queries the database and returns the results
 
 ## Installed AWS CLI
 
