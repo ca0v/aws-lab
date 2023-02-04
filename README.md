@@ -43,19 +43,7 @@ I then received this error when attempting to start the database,
 
     An error occurred (AccessDenied) when calling the StartDBInstance operation: User: arn:aws:iam::255691332024:user/corey_01 is not authorized to perform: rds:StartDBInstance on resource: arn:aws:rds:us-east-1:255691332024:db:database-1 because no identity-based policy allows the rds:StartDBInstance action
 
-I was able to resolve the "no identity-based policy allows the rds:StartDBInstance action" error by adding modifying the IAM user's policy to include the following,
-
-    {
-        "Sid": "VisualEditor0",
-        "Effect": "Allow",
-        "Action": [
-            "rds:StartDBInstance",
-            "rds:StopDBInstance"
-        ],
-        "Resource": "arn:aws:rds:us-east-1:255691332024:db:database-1"
-    }
-
-I did this by doing the following:
+I was able to resolve the "no identity-based policy allows the rds:StartDBInstance action" error by giving user full access to RDS.  I did this by doing the following:
 
 * Go to the IAM console
 * Click on the user
@@ -116,7 +104,7 @@ Use this command to only show the status:
 
 When you run an aws command, the CLI seems to be in VI?  To exit, press "q"
 
-## AWS - billing
+## AWS - Billing (HERE I AM)
 
 To check your billing using AWS CLI for month-to-date, use the following command:
 
