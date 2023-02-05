@@ -13,6 +13,49 @@ Here I track my learning progress in Amazon Web Services.
 ## AWS - Lambda
 
 * Created a lambda function and called it from local desktop (invoke_lambda.js)
+* I put credentials in ~/.aws/credentials
+* I used the following command to invoke the lambda function:
+
+    >aws lambda invoke --function-name Notes output.txt
+
+* I received the following error, "An error occurred (InvalidSignatureException) when calling the Invoke operation: Signature expired"
+
+* I checked my system time (WSL) using the following command:
+
+    >date
+
+* The clock was off by 45 minutes, so I fixed it by running the following command in wsl bash:
+
+    >sudo ntpdate pool.ntp.org
+
+* I got the link to the lambda function using:
+
+    >aws lambda get-function --function-name Notes --query 'Code.Location' --output text > lambda.url
+
+* I then used curl to download the lambda function using:
+
+    >curl -o lambda.zip $(cat lambda.url)
+
+* This can be done in one step:
+
+    >curl -o lambda.zip $(aws lambda get-function --function-name Notes --query 'Code.Location' --output text)
+
+* I then unzipped the lambda function using:
+
+    >unzip lambda.zip
+
+* I am able to modify the lambda locally and run it on aws using the following commands:
+
+    >zip lambda.zip lambda.js
+    >aws lambda update-function-code --function-name Notes --zip-file fileb://lambda.zip
+
+* I also moved the lambda function to S3 via the AWS CLI
+
+    >aws s3 cp lambda.zip s3://ca0v0001
+
+* I can list all the files on the S3 bucket using:
+
+    >aws s3 ls s3://ca0v0001
 
 ## AWS - DBS (MySQL)
 
@@ -128,3 +171,18 @@ It did not work so I give the user the ce:GetCostAndUsage permission:
     }
 
 But it still did not work.  Now I am seeing "An error occurred (AccessDeniedException) when calling the GetCostAndUsage operation: User not enabled for cost explorer access".  I have not yet figured out how to enable cost explorer access.
+
+## Podman
+
+I am using a windows ARM processor, which may be why I could not get Docker working, and so I installed podman.  
+
+The goal is to debug the lambda function locally and since podman is replacing docker, I had to create an alias:
+
+    alias docker=podman
+
+But this seems incompatible with AWS.  I receive, "Error: Running AWS SAM projects locally requires Docker. Have you got it installed and running?"
+
+## Debugging Lambda Locally
+
+This will not be possible without Docker (or Podman), neither of which is working with SAM.
+Will try again on MacBook.

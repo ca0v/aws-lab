@@ -8,6 +8,7 @@
     "db:status": "aws rds describe-db-instances --db-instance-identifier database-1 --query \"DBInstances[*].DBInstanceStatus\"",
     "db:stop": "aws rds stop-db-instance --db-instance-identifier database-1",
     "db:start": "aws rds start-db-instance --db-instance-identifier database-1",
+    "tick": "sudo ntpdate pool.ntp.org",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
