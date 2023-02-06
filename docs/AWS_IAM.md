@@ -17,7 +17,13 @@ It is critical to understand the following concepts when working with IAM:
 
 ## IAM Users
 
+The root user is not an IAM user, it is the user that created the AWS account. Only root user can view billing information.  See [AWS Account Management Reference Guide](https://docs.aws.amazon.com/accounts/latest/reference/root-user-tasks.html) for details.
+
+The root users first task is to create an administrative user.  This user will have full access to all AWS services.  This user will be used to create other users and groups and will not be used to perform day-to-day tasks.
+
 IAM users are the entities that you create in AWS IAM to represent the people or applications that interact with AWS. You can use IAM users to control who has access to your AWS resources and what type of access they have. You can create and manage your own AWS users or you can allow AWS to create and manage them for you.
+
+IAM Users have a name and credentials.
 
 ### Principals
 
@@ -52,13 +58,29 @@ A resource is an object that is protected by AWS. For example, an Amazon S3 buck
 
 IAM roles are a secure way to grant permissions to code that runs on AWS resources. You can use roles to delegate access to users, applications, or services that don't normally have access to your AWS resources. For example, you might want to allow a user in one AWS account to access resources in another AWS account. Or you might want to allow an application in an EC2 instance to access resources in an Amazon S3 bucket.
 
+Think of an IAM Role as an IAM user with temporary permissions.  A trust policy is used to grant permissions to the role.  The role is then attached to an AWS resource.  The resource can then assume the role and use the permissions granted by the trust policy.  The trust policy can be attached to multiple roles and the roles can be attached to multiple resources.
+
+Concepts:
+
+    * A role is a permission policy that can be assumed by an AWS service or a user.
+    * There are no long-term credentials associated with a role.
+    * A user "takes-on" a role to gain temporary access to AWS resources via token service.
+    * Users to not "normally" have access to resources, they are temporarily granted access via roles.
+    * Users must establish a trust relationship to "take-on" a role.
+    * User must sts:AssumeRole to take-on a role.
+
 ## IAM Policies
 
 IAM policies are documents that define one or more permissions. Policies are associated with IAM identities (users or roles) or AWS resources. When you create a policy, you specify one or more permissions and the effect that this permission has. This effect is Allow or Deny. You can also specify a condition that must be met for the permission to be effective. For example, you might want to allow access to an Amazon S3 bucket only if the request includes a specific header that provides a secret password.
 
+A resource-based policy is not attached to a user but to a resource. For example, you might create a policy that allows access to an Amazon S3 bucket. Then you attach the policy to the bucket. Any user who has access to the bucket can perform the actions that are defined in the policy.
+
 ## IAM Groups
 
 IAM groups are a collection of IAM users. You can use groups to specify permissions for multiple users at one time. For example, you might create a group of users who need access to your Amazon S3 bucket. Then you can add or remove users from the group as needed, and all the members of the group automatically have access to the Amazon S3 bucket.
+
+Best practice would be to assign permissions to groups and not users.  This allows you to add and remove users from groups as needed.  Groups are not hierarchical.
+
 
 ## IAM Tooling
 

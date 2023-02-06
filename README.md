@@ -6,6 +6,8 @@ Here I track my learning progress in Amazon Web Services.
 
 * Created [AWS_IAM.md](docs/AWS_IAM.md) to document IAM.
 * Used identity and access management to create a user and give it access to the AWS console as well as S3 buckets.
+* Created and admin super-user using IAM Identity Center
+* Created CLI_BOSS user for the AWS CLI (default)
 
 ## AWS - S3
 
@@ -77,7 +79,11 @@ Here I track my learning progress in Amazon Web Services.
 The above installed aws in /usr/local/bin/aws
 I then added the following to my .bashrc
 
-    export PATH=$PATH:/usr/local/bin/aws
+    PATH=$PATH:/usr/local/bin/aws
+
+To generate aws.txt:
+
+    >aws help | sed -i 's/.\x08//g' aws.txt
 
 Next, I had to configuration a region using
 
@@ -121,7 +127,7 @@ If you want to generate docs from the command line, you can do the following:
     aws rds help > rds.txt
 
 But then the document has a lot of "" characters, so you need to apply them or you'll get duplicate letters.  I tried this by deleting the character before "" using the following script:
-    
+
         #!/bin/bash
     
         sed -i 's///g' rds.txt
@@ -149,6 +155,36 @@ Use this command to only show the status:
     aws rds describe-db-instances --db-instance-identifier database-1 --query "DBInstances[*].DBInstanceStatus"
 
 When you run an aws command, the CLI seems to be in VI?  To exit, press "q"
+
+After using the CLI for a time as the admin user, I was receiving "The security token included in the request is expired" error.
+
+As I did not know what to do, I created a new "CLI_BOSS" user, modified the ~/.aws/credentials \[DEFAULT\] user but was still unable to use those credentials without explicitly specifying the default profile:
+
+    >aws --profile default sts get-session-token
+
+What is going on?  Well, I exported some AWS variables when I setup the admin user.  You can list all exported variables via:
+
+    >export -p
+
+You can delete a variable via:
+
+    >unset AWS_ACCESS_KEY_ID
+    >unset AWS_SECRET_ACCESS_KEY
+    >unset AWS_SESSION_TOKEN
+
+Once I did that, the above command worked. Now I can run the following command to get the default user:
+
+    >aws sts get-caller-identity
+
+Which reported the proper user (CLI_BOSS).  I believe this will work indefinitely, which is probably not what I want.  I should rotate the keys.
+
+The keys can be rotated using the following tooling:
+
+    >aws iam list-access-keys --user-name CLI_BOSS
+    >aws iam create-access-key --user-name CLI_BOSS
+    >aws iam delete-access-key --user-name CLI_BOSS --access-key-id [key-provided-via-list]
+
+The idea being to create a new key, delete the old key, and use list for observational purposes.
 
 ## AWS - Billing (HERE I AM)
 

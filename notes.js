@@ -6,16 +6,20 @@ var bucketName = "ca0v0001"
 var keyName = "notes.txt"
 var params = { Bucket: bucketName, Key: keyName }
 
+// who is the AWS user?
+
+
+
 // to generate aws access key id and secret access key you need to
 // create a user in aws console and then generate the keys
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
 
 // get the 1st argument from the command line
-var arg = process.argv[2]
+var mode = process.argv[2]
 
 // if the argument is "read" then read from the s3 bucket
-if (arg == "read") {
+if (mode == "read") {
   s3.getObject(params, function (err, data) {
     if (err) {
       console.log(err, err.stack)
@@ -34,7 +38,7 @@ if (arg == "read") {
 }
 
 // if the argument is "write" then write to the s3 bucket
-if (arg == "write") {
+if (mode == "write") {
   // read notes.txt file
   var body = fs.readFileSync("notes.txt", "utf-8")
   params.Body = body
