@@ -81,6 +81,55 @@ async function queryDatabase() {
   })
 }
 
+/**
+ * @param {string} user
+ * @param {any} bucket
+ * @param {any} file
+ */
+async function grantAccessToFile(user, bucket, file) {
+  return applyPolicyToUser(user, bucket, {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "PermissionForObjectOperations",
+        Effect: "Allow",
+        Action: ["s3:PutObject"],
+        Resource: [`arn:aws:s3:::${bucket}/${file}`],
+      },
+    ],
+  })
+}
+
+/**
+ * @param {string} userName
+ * @param {any} bucket
+ * @param {{Version: string;Statement: {Sid: string;Effect: string;Action: string[];Resource: string[];}[];}} policy
+ */
+async function applyPolicyToUser(userName, bucket, policy) {
+  return new Promise((resolve, reject) => {
+    const iam = new AWS.IAM()
+    iam.putUserPolicy(
+      {
+        UserName: userName,
+        PolicyName: `s3-policy-${bucket}`,
+        PolicyDocument: JSON.stringify(policy),
+      },
+      function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          console.log(
+            `Successfully applied policy to user ${userName}: ${JSON.stringify(
+              policy
+            )}`
+          )
+          resolve(data)
+        }
+      }
+    )
+  })
+}
+
 async function main() {
   // read the bucket name from args
   const bucketName = process.argv[2]
@@ -158,6 +207,17 @@ async function main() {
       )
     })
   })
+
+  // allow corey_01 to write to the file
+  console.log(await grantAccessToFile("corey_01", bucketName, "data.csv"))
+
+  // download data.csv from s3
+  console.log(`aws s3 cp s3://${bucketName}/data.csv data.csv`)
+  // use the aws cli to append "hello world" to the file using corey_01
+  console.log(`echo "hello world" >> data.csv`)
+  console.log(
+    `aws s3 cp --profile corey_01 data.csv s3://${bucketName}/data.csv`
+  )
 }
 
 main()

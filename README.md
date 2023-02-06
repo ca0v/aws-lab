@@ -225,3 +225,9 @@ But this seems incompatible with AWS.  I receive, "Error: Running AWS SAM projec
 
 This will not be possible without Docker (or Podman), neither of which is working with SAM.
 Will try again on MacBook.
+
+
+## Notes
+
+List all IAM users:
+    > aws iam list-users
