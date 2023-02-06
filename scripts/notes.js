@@ -8,8 +8,6 @@ var params = { Bucket: bucketName, Key: keyName }
 
 // who is the AWS user?
 
-
-
 // to generate aws access key id and secret access key you need to
 // create a user in aws console and then generate the keys
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
@@ -30,7 +28,7 @@ if (mode == "read") {
         if (err) {
           console.log(err)
         } else {
-          console.log("Successfully saved to file")
+          console.log("Successfully saved to notes.txt")
         }
       })
     }
@@ -46,7 +44,9 @@ if (mode == "write") {
     if (err) {
       console.log(err, err.stack)
     } else {
-      console.log("Successfully uploaded data to " + bucketName + "/" + keyName)
+      console.log(
+        "Successfully uploaded notes.txt to " + bucketName + "/" + keyName
+      )
     }
   })
 }
