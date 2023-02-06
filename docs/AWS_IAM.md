@@ -52,7 +52,7 @@ An action is a request to perform an operation on a resource. For example, a use
 
 ### Resources
 
-A resource is an object that is protected by AWS. For example, an Amazon S3 bucket is a resource. A user might request to list the objects in a bucket. The bucket is the resource.
+A resource is an object that is protected by AWS. For example, an Amazon S3 bucket is a resource. A user might request to list the objects in a bucket. The bucket is the resource.  No resource may communicate with another resource without permission.
 
 ## IAM Roles
 
@@ -68,6 +68,8 @@ Concepts:
     * Users to not "normally" have access to resources, they are temporarily granted access via roles.
     * Users must establish a trust relationship to "take-on" a role.
     * User must sts:AssumeRole to take-on a role.
+
+Finally, an example of a role would be to allow an EC2 instance to access an S3 bucket.  The EC2 instance would assume the role and then have access to the S3 bucket.  Code running on this EC2 instance will be able to access to the S3 bucket.
 
 ## IAM Policies
 
