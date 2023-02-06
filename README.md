@@ -4,7 +4,10 @@ Here I track my learning progress in Amazon Web Services.
 
 ## AWS - IAM
 
+* Created [AWS_IAM.md](docs/AWS_IAM.md) to document IAM.
 * Used identity and access management to create a user and give it access to the AWS console as well as S3 buckets.
+
+## AWS - S3
 
 * Created an S3 Bucket
 
