@@ -2,200 +2,152 @@ import AWS from "aws-sdk"
 import { createConnection } from "../../access_keys/create_connection.mjs"
 
 const s3 = new AWS.S3()
+const iam = new AWS.IAM()
 
-// creates an s3 bucket
-/**
- * @param {any} bucketName
- */
-function createS3Bucket(bucketName) {
-  s3.createBucket(
-    {
+class AwsFacade {
+  /**
+   * @param {string} bucketName
+   * @param {string} fileName
+   */
+  getFileFromBucket(bucketName, fileName) {
+    // return the contents of the file in the s3 bucket
+    const params = {
       Bucket: bucketName,
-      ACL: "public-read",
-    },
-    function (err, data) {
-      if (err) {
-        console.log("Error", err)
-      } else {
-        console.log("Success", data.Location)
-      }
+      Key: fileName,
     }
-  )
-}
-
-/**
- * @return {Promise<AWS.S3.Buckets|undefined>}
- */
-async function listS3Buckets() {
-  return new Promise((resolve, reject) => {
-    s3.listBuckets(function (err, data) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(data.Buckets)
-      }
-    })
-  })
-}
-
-/**
- *
- * @param {*} bucketName
- * @returns {Promise<AWS.S3.Object[]|undefined>}
- */
-async function listAllFilesInBucket(bucketName) {
-  return new Promise((resolve, reject) => {
-    s3.listObjectsV2(
-      {
-        Bucket: bucketName,
-      },
-      function (err, data) {
+    return new Promise((resolve, reject) => {
+      s3.getObject(params, function (err, data) {
         if (err) {
           reject(err)
         } else {
-          resolve(data.Contents)
+          resolve(data.Body?.toString())
         }
-      }
-    )
-  })
-}
-
-/**
- * @returns {Promise<any[]|undefined>}
- */
-async function queryDatabase() {
-  return new Promise((resolve, reject) => {
-    // connect to the mysql database
-    const connection = createConnection()
-    connection.connect(function (err) {
-      connection.query("SELECT * FROM names", function (err, result) {
-        connection.end()
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(result)
-        return
       })
     })
-  })
-}
+  }
+  /**
+   * @param {string} groupName
+   */
+  createGroup(groupName) {
+    return new Promise((resolve, reject) => {
+      iam.createGroup(
+        {
+          GroupName: groupName,
+        },
+        function (err, data) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(data)
+          }
+        }
+      )
+    })
+  }
 
-/**
- * @param {string} user
- * @param {any} bucket
- * @param {any} file
- */
-async function grantAccessToFile(user, bucket, file) {
-  return applyPolicyToUser(user, bucket, {
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Sid: "PermissionForObjectOperations",
-        Effect: "Allow",
-        Action: ["s3:PutObject"],
-        Resource: [`arn:aws:s3:::${bucket}/${file}`],
-      },
-    ],
-  })
-}
-
-/**
- * @param {string} userName
- * @param {any} bucket
- * @param {{Version: string;Statement: {Sid: string;Effect: string;Action: string[];Resource: string[];}[];}} policy
- */
-async function applyPolicyToUser(userName, bucket, policy) {
-  return new Promise((resolve, reject) => {
-    const iam = new AWS.IAM()
-    iam.putUserPolicy(
-      {
-        UserName: userName,
-        PolicyName: `s3-policy-${bucket}`,
-        PolicyDocument: JSON.stringify(policy),
-      },
-      function (err, data) {
+  listUsers() {
+    return new Promise((resolve, reject) => {
+      iam.listUsers({}, function (err, data) {
         if (err) {
           reject(err)
         } else {
-          console.log(
-            `Successfully applied policy to user ${userName}: ${JSON.stringify(
-              policy
-            )}`
-          )
           resolve(data)
+        }
+      })
+    })
+  }
+
+  /**
+   * @param {string} bucketName
+   * @param {string} fileName
+   * @param {string} fileContent
+   */
+  addFileToBucket(bucketName, fileName, fileContent) {
+    const params = {
+      Bucket: bucketName,
+      Key: fileName,
+      Body: fileContent,
+    }
+    return new Promise((resolve, reject) => {
+      s3.upload(
+        params,
+        function (/** @type {any} */ err, /** @type {any} */ data) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(data)
+          }
+        }
+      )
+    })
+  }
+
+  // creates an s3 bucket
+  /**
+   * @param {any} bucketName
+   */
+  createS3Bucket(bucketName) {
+    s3.createBucket(
+      {
+        Bucket: bucketName,
+        ACL: "public-read",
+      },
+      function (err, data) {
+        if (err) {
+          console.log("Error", err)
+        } else {
+          console.log("Success", data.Location)
         }
       }
     )
-  })
-}
-
-async function main() {
-  // read the bucket name from args
-  const bucketName = process.argv[2]
-  if (!bucketName) {
-    console.log("Please provide a bucket name")
-    return
   }
 
-  const buckets = await listS3Buckets()
-  if (!buckets?.find((b) => b.Name === bucketName)) {
-    console.log("Bucket not found, creating new bucket")
-    createS3Bucket(bucketName)
+  /**
+   * @return {Promise<AWS.S3.Buckets|undefined>}
+   */
+  async listS3Buckets() {
+    return new Promise((resolve, reject) => {
+      s3.listBuckets(function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data.Buckets)
+        }
+      })
+    })
   }
 
-  const files = await listAllFilesInBucket(bucketName)
-  console.log({ files })
-
-  // read rows from the database
-  const rows = await queryDatabase()
-  console.log({ rows })
-  if (!rows) return
-  // convert the rows to csv and write them to the s3 bucket
-  const csv = rows
-    .map((row) => {
-      const values = Object.values(row)
-      console.log(JSON.stringify(row))
-      return values.join(",")
+  /**
+   *
+   * @param {*} bucketName
+   * @returns {Promise<AWS.S3.Object[]|undefined>}
+   */
+  async listAllFilesInBucket(bucketName) {
+    return new Promise((resolve, reject) => {
+      s3.listObjectsV2(
+        {
+          Bucket: bucketName,
+        },
+        function (err, data) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(data.Contents)
+          }
+        }
+      )
     })
-    .join("\n")
-  console.log({ csv })
+  }
 
-  // write the csv to the s3 bucket
-
-  await s3
-    .putObject({
-      Bucket: bucketName,
-      Key: "data.csv",
-      Body: csv,
-    })
-    .promise()
-
-  // read the csv from the s3 bucket
-  const data = await s3
-    .getObject({
-      Bucket: bucketName,
-      Key: "data.csv",
-    })
-    .promise()
-
-  // read the body from data
-  const body = data.Body?.toString()
-  console.log({ body })
-
-  // inject the current date into the database
-  const date = new Date().toISOString()
-  await new Promise((resolve, reject) => {
-    const connection = createConnection()
-    connection.connect(function (err) {
-      if (err) {
-        reject(err)
-        return
-      }
-
-      connection.query(
-        `INSERT INTO names (name, value) VALUES ('${date}', '${date}')`,
-        function (err, result) {
+  /**
+   * @returns {Promise<any[]|undefined>}
+   */
+  async queryDatabase() {
+    return new Promise((resolve, reject) => {
+      // connect to the mysql database
+      const connection = createConnection()
+      connection.connect(function (err) {
+        connection.query("SELECT * FROM names", function (err, result) {
           connection.end()
           if (err) {
             reject(err)
@@ -203,21 +155,176 @@ async function main() {
           }
           resolve(result)
           return
+        })
+      })
+    })
+  }
+
+  /**
+   * @param {string} user
+   * @param {any} bucket
+   * @param {any} file
+   */
+  async grantAccessToFile(user, bucket, file) {
+    return this.applyPolicyToUser(user, bucket, {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Sid: "PermissionForObjectOperations",
+          Effect: "Allow",
+          Action: ["s3:PutObject"],
+          Resource: [`arn:aws:s3:::${bucket}/${file}`],
+        },
+      ],
+    })
+  }
+
+  /**
+   * @param {string} userName
+   * @param {any} bucket
+   * @param {{Version: string;Statement: {Sid: string;Effect: string;Action: string[];Resource: string[];}[];}} policy
+   */
+  async applyPolicyToUser(userName, bucket, policy) {
+    return new Promise((resolve, reject) => {
+      iam.putUserPolicy(
+        {
+          UserName: userName,
+          PolicyName: `s3-policy-${bucket}`,
+          PolicyDocument: JSON.stringify(policy),
+        },
+        function (err, data) {
+          if (err) {
+            reject(err)
+          } else {
+            console.log(
+              `Successfully applied policy to user ${userName}: ${JSON.stringify(
+                policy
+              )}`
+            )
+            resolve(data)
+          }
         }
       )
     })
-  })
+  }
+}
 
-  // allow corey_01 to write to the file
-  console.log(await grantAccessToFile("corey_01", bucketName, "data.csv"))
+const api = new AwsFacade()
 
-  // download data.csv from s3
-  console.log(`aws s3 cp s3://${bucketName}/data.csv data.csv`)
-  // use the aws cli to append "hello world" to the file using corey_01
-  console.log(`echo "hello world" >> data.csv`)
-  console.log(
-    `aws s3 cp --profile corey_01 data.csv s3://${bucketName}/data.csv`
-  )
+async function main() {
+  const noun = process.argv[2]
+  const verb = process.argv[3]
+
+  const commands = [
+    {
+      noun: "bucket",
+      verbs: {
+        create: async () => {
+          const bucketName = process.argv[4]
+          if (!bucketName) {
+            console.log("Please provide a bucket name")
+            return
+          }
+          api.createS3Bucket(bucketName)
+        },
+        list: async () => {
+          const buckets = await api.listS3Buckets()
+          console.log({ buckets })
+        },
+        "add-file": async () => {
+          const bucketName = process.argv[4]
+          const fileName = process.argv[5]
+          if (!bucketName) {
+            console.log("Please provide a bucket name")
+            return
+          }
+          if (!fileName) {
+            console.log("Please provide a file name")
+            return
+          }
+          const fileContent = "Hello World!"
+          await api.addFileToBucket(bucketName, fileName, fileContent)
+        },
+        "list-files": async () => {
+          const bucketName = process.argv[4]
+          if (!bucketName) {
+            console.log("Please provide a bucket name")
+            return
+          }
+          const files = await api.listAllFilesInBucket(bucketName)
+          console.log({ files })
+        },
+        "show-file": async () => {
+          const bucketName = process.argv[4]
+          const fileName = process.argv[5]
+          if (!bucketName) {
+            console.log("Please provide a bucket name")
+            return
+          }
+          if (!fileName) {
+            console.log("Please provide a file name")
+            return
+          }
+          const fileContent = await api.getFileFromBucket(bucketName, fileName)
+          console.log({ fileContent })
+        },
+      },
+    },
+    {
+      noun: "database",
+      verbs: {
+        query: async () => {
+          const rows = await api.queryDatabase()
+          console.log({ rows })
+        },
+      },
+    },
+    {
+      noun: "user",
+      verbs: {
+        list: async () => {
+          const users = await api.listUsers()
+          console.log(JSON.stringify(users, null, "  "))
+        },
+        "grant-access": async () => {
+          const user = process.argv[4]
+          if (!user) {
+            console.log("Please provide a user name")
+            return
+          }
+          const bucket = process.argv[5]
+          if (!bucket) {
+            console.log("Please provide a bucket name")
+            return
+          }
+
+          const file = process.argv[6]
+          if (!file) {
+            console.log("Please provide a file name")
+            return
+          }
+          await api.grantAccessToFile(user, bucket, file)
+        },
+      },
+    },
+  ]
+
+  const command = commands.find((c) => c.noun === noun)
+  if (!command) {
+    console.log(`Unknown noun: ${noun || ""}`)
+    console.log(`try one of these: ${commands.map((c) => c.noun).join(", ")}`)
+    return
+  }
+
+  // @ts-ignore
+  const doit = command.verbs[verb]
+  if (!doit) {
+    console.log(`Unknown verb: ${verb || ""}`)
+    console.log(`try one of these: ${Object.keys(command.verbs).join(", ")}`)
+    return
+  }
+
+  await doit()
 }
 
 main()

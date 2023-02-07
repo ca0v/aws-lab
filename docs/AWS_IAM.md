@@ -83,10 +83,23 @@ IAM groups are a collection of IAM users. You can use groups to specify permissi
 
 Best practice would be to assign permissions to groups and not users.  This allows you to add and remove users from groups as needed.  Groups are not hierarchical.
 
-
 ## IAM Tooling
 
 ### AWS Security Hub
 
 AWS Security Hub is a service that helps you to consolidate your findings from AWS security services and third-party security solutions. It also provides you with a comprehensive view of your security state within AWS and helps you to prioritize your remediation efforts.
 
+## Tasks to Complete
+
+* Deny all non-MFA users access to ca0v0001 bucket
+* Allow CLI_BOSS (a non-MFA user) access to ca0v0001 bucket
+* Create a group
+* Assign permissions to the group
+* Create a user
+* Add a user to the group
+
+## Tasks Completed
+
+* Created IAM admin user using MFA
+* Created CLI_BOSS CLI-only user
+* Created file-level access permissions user

@@ -5,6 +5,7 @@ Here I track my learning progress in Amazon Web Services.
 ## AWS - IAM
 
 * Created [AWS_IAM.md](docs/AWS_IAM.md) to document IAM.
+* A "principal" is a user
 * Used identity and access management to create a user and give it access to the AWS console as well as S3 buckets.
 * Created and admin super-user using IAM Identity Center
 * Created CLI_BOSS user for the AWS CLI (default)
@@ -12,8 +13,13 @@ Here I track my learning progress in Amazon Web Services.
 ## AWS - S3
 
 * Created an S3 Bucket
-
 * Wrote code to read and write "notes.txt" to the S3 bucket
+
+### S3 Concepts
+
+* Buckets have folders
+* Folders have objects
+* IAM resource policy applies to buckets and folders and objects
 
 ## AWS - Lambda
 
@@ -24,7 +30,6 @@ Here I track my learning progress in Amazon Web Services.
     >aws lambda invoke --function-name Notes output.txt
 
 * I received the following error, "An error occurred (InvalidSignatureException) when calling the Invoke operation: Signature expired"
-
 * I checked my system time (WSL) using the following command:
 
     >date
@@ -226,8 +231,10 @@ But this seems incompatible with AWS.  I receive, "Error: Running AWS SAM projec
 This will not be possible without Docker (or Podman), neither of which is working with SAM.
 Will try again on MacBook.
 
-
 ## Notes
 
 List all IAM users:
     > aws iam list-users
+
+List current user:
+    > aws sts get-caller-identity
