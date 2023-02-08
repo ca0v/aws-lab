@@ -14,16 +14,24 @@ I am trying to understand the best way to retrieve this information so as to not
 
 These are the best practices for accessing data in the `~/.aws/credentials` file:
 
-  1. Use the AWS CLI to access the data.
-  2. Use the AWS SDK to access the data.
-  3. Use the AWS CLI to access the data and then use the AWS SDK to access the data.
-
 Example of accessing using the SDK:
 
 ```javascript
 const AWS = require('aws-sdk');
 const credentials = new AWS.SharedIniFileCredentials({profile: 'default'});
 AWS.config.credentials = credentials;
+```
+
+Example of accessing using the CLI:
+
+```bash
+>aws s3 ls --profile default
+```
+
+AWS DBS also has credentials that can be stored in the `~/.aws/credentials` file.  To store the master-user-password in ~/.aws.credential, run the following AWS CLI command:
+
+```bash
+>aws rds modify-db-instance --db-instance-identifier ca0v0001 --master-user-password <password>
 ```
 
 ## Commands
@@ -38,9 +46,11 @@ AWS.config.credentials = credentials;
 * user-revoke-access
 * user-grant-access
 
-These commands are implemented in [index.mjs](./index.mjs) and used Copilot to generate it.
+These commands are implemented in [index.mjs](./index.mjs) and I used Copilot to generate them.
 
-The AWS CLI should be used to perform these tasks.
+### database-* commands
+
+The `DBInstanceIdentifier` is not the same as the `DBName`.  For this tutorial, the identifier is `?`.
 
 ## TODO For this Tutorial
 

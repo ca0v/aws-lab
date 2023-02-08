@@ -1,18 +1,20 @@
+import * as DOTENV from "dotenv"
+DOTENV.config({
+  path: "../../access_keys/.env",
+  debug: true,
+})
+
 import { createConnection as _createConnection } from "mysql"
 import pkg from "aws-sdk"
 const { config } = pkg
+config.update({ region: "us-east-1" })
 
-// secret configuration data is best stored in a separate file.
-// this file is not included in the repository.
-import { db_host, db_user, db_password } from "../access_keys/access_keys.mjs"
+const db_name = process.env.AWS_DBS_DATABASE_01_NAME || ""
+const db_host = process.env.AWS_DBS_DATABASE_01_HOST || ""
+const db_user = process.env.AWS_DBS_DATABASE_01_ADMIN_USER
+const db_password = process.env.AWS_DBS_DATABASE_01_ADMIN_PASSWORD
 
 function createConnection() {
-  // get the region from the environment variable
-  const region = process.env.AWS_REGION
-  console.log({ region })
-
-  config.update({ region: "us-east-1" })
-
   // connect to the database
   var connection = _createConnection({
     host: db_host,
@@ -25,4 +27,4 @@ function createConnection() {
   return connection
 }
 
-export { createConnection }
+export { createConnection, db_name, db_host }

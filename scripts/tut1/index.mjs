@@ -1,8 +1,10 @@
 import AWS from "aws-sdk"
-import { createConnection } from "../create_connection.mjs"
+
+import { createConnection, db_name } from "../create_connection.mjs"
 
 const s3 = new AWS.S3()
 const iam = new AWS.IAM()
+const rds = new AWS.RDS()
 
 class AwsFacade {
   /**
@@ -136,6 +138,91 @@ class AwsFacade {
           }
         }
       )
+    })
+  }
+
+  /**
+   * @param {string} databaseName
+   */
+  getDatabaseStatus(databaseName) {
+    console.log(`checking database status for "${databaseName}"`)
+    // check the status of the database
+    const params = {
+      DBInstanceIdentifier: databaseName,
+    }
+    return new Promise((resolve, reject) => {
+      rds.describeDBInstances(params, function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+
+  /**
+   * @param {string} databaseName
+   */
+  stopDatabase(databaseName) {
+    console.log(`stopping database "${databaseName}"`)
+    // stop the database
+    const params = {
+      DBInstanceIdentifier: databaseName,
+    }
+    return new Promise((resolve, reject) => {
+      rds.stopDBInstance(params, function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+
+  /**
+   * @param {string} databaseName
+   */
+  async startDatabase(databaseName) {
+    console.log(`starting database "${databaseName}"`)
+    // start the database
+    const params = {
+      DBInstanceIdentifier: databaseName,
+    }
+    return new Promise((resolve, reject) => {
+      rds.startDBInstance(params, function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+
+  /**
+   * @param {string} note
+   */
+  addNoteToDatabase(note) {
+    // insert the note into the names table
+    return new Promise((resolve, reject) => {
+      const connection = createConnection()
+      connection.connect(function (err) {
+        const timestamp = new Date().toISOString()
+        connection.query(
+          `INSERT INTO names (name, value) VALUES ('${timestamp}', '${note}')`,
+          function (err, result) {
+            connection.end()
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(result)
+            return
+          }
+        )
+      })
     })
   }
 
@@ -298,6 +385,24 @@ async function main() {
     {
       noun: "database",
       verbs: {
+        start: async () => {
+          await api.startDatabase(db_name)
+        },
+        status: async () => {
+          const status = await api.getDatabaseStatus(db_name)
+          console.log(JSON.stringify(status, null, "  "))
+        },
+        stop: async () => {
+          await api.stopDatabase(db_name)
+        },
+        note: async () => {
+          const note = argReader.read()
+          if (!note) {
+            console.log("Please provide a note")
+            return
+          }
+          await api.addNoteToDatabase(note)
+        },
         query: async () => {
           const rows = await api.queryDatabase()
           console.log({ rows })
