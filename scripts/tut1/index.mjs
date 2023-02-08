@@ -1,3 +1,6 @@
+import * as fs from "node:fs/promises"
+import AdmZip from "adm-zip"
+
 import AWS from "aws-sdk"
 
 import { createConnection, db_name } from "../create_connection.mjs"
@@ -5,8 +8,54 @@ import { createConnection, db_name } from "../create_connection.mjs"
 const s3 = new AWS.S3()
 const iam = new AWS.IAM()
 const rds = new AWS.RDS()
+const lambda = new AWS.Lambda()
 
 class AwsFacade {
+  /**
+   * @param {string} lambdaName
+   * @param {Buffer} zipData
+   */
+  uploadLambda(lambdaName, zipData) {
+    return lambda
+      .updateFunctionCode({
+        FunctionName: lambdaName,
+        ZipFile: zipData,        
+      })
+      .promise()
+  }
+  /**
+   * @param {string} lambdaName
+   */
+  downloadLambda(lambdaName) {
+    return lambda
+      .getFunction({
+        FunctionName: lambdaName,
+      })
+      .promise()
+  }
+  async listLambdas() {
+    return new Promise((resolve, reject) => {
+      lambda.listFunctions({}, function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data.Functions)
+        }
+      })
+    })
+  }
+
+  /**
+   * @param {string} lambdaName
+   */
+  async executeLambda(lambdaName) {
+    return lambda
+      .invoke({
+        FunctionName: lambdaName,
+      })
+      .promise()
+  }
+
   /**
    * @param {string} bucketName
    * @param {string} fileName
@@ -453,6 +502,66 @@ async function main() {
             return
           }
           await api.grantAccessToFile(user, bucket, file)
+        },
+      },
+    },
+    {
+      noun: "lambda",
+      verbs: {
+        list: async () => {
+          const lambdas = await api.listLambdas()
+          console.log(JSON.stringify(lambdas, null, "  "))
+        },
+        execute: async () => {
+          const lambdaName = argReader.read()
+          if (!lambdaName) {
+            console.log("Please provide a lambda name")
+            return
+          }
+          const result = await api.executeLambda(lambdaName)
+          console.log(JSON.stringify(result, null, "  "))
+        },
+        download: async () => {
+          const lambdaName = argReader.read()
+          if (!lambdaName) {
+            console.log("Please provide a lambda name")
+            return
+          }
+          const result = await api.downloadLambda(lambdaName)
+          console.log(JSON.stringify(result, null, "  "))
+          const location = result.Code?.Location
+          if (!location) {
+            console.log("No code found")
+            return
+          }
+          // download the actual code
+          const code = await fetch(location)
+          const zipData = await code.arrayBuffer()
+
+          // write the data to a file
+          await fs.writeFile(`${lambdaName}.zip`, Buffer.from(zipData))
+
+          // unzip the file
+          const zip = new AdmZip(`${lambdaName}.zip`)
+          zip.extractAllTo(`./${lambdaName}`, true)
+
+          console.log(`"${lambdaName}" downloaded to ./${lambdaName} folder`)
+        },
+        upload: async () => {
+          const lambdaName = argReader.read()
+          if (!lambdaName) {
+            console.log("Please provide a lambda name")
+            return
+          }
+          const zip = new AdmZip()
+          zip.addLocalFolder(`./${lambdaName}`)
+          const zipData = zip.toBuffer()
+
+          // write zipData to file
+          await fs.writeFile(`${lambdaName}.zip`, zipData)
+
+          const result = await api.uploadLambda(lambdaName, zipData)
+          console.log(JSON.stringify(result, null, "  "))
         },
       },
     },

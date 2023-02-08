@@ -36,15 +36,23 @@ AWS DBS also has credentials that can be stored in the `~/.aws/credentials` file
 
 ## Commands
 
-* bucket-create
-* bucket-list
-* bucket-add-file
-* bucket-list-files
-* bucket-show-file
-* database-query
-* user-list
-* user-revoke-access
-* user-grant-access
+bucket-create
+bucket-list
+bucket-add-file
+bucket-list-files
+bucket-show-file
+database-start
+database-status
+database-stop
+database-note
+database-query
+lambda-list
+lambda-execute
+lambda-download
+lambda-upload
+user-list
+user-revoke-access
+user-grant-access
 
 These commands are implemented in [index.mjs](./index.mjs) and I used Copilot to generate them.
 
