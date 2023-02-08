@@ -1,9 +1,6 @@
 // connect to the aws mysql database named "database-1"
 
-const { createConnection } = require("../access_keys/create_connection.mjs")
-var mysql = require("mysql")
-var AWS = require("aws-sdk")
-AWS.config.update({ region: "us-east-1" })
+import { createConnection } from "../access_keys/create_connection.mjs"
 
 // connect to the database
 var connection = createConnection()

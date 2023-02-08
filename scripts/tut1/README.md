@@ -2,6 +2,30 @@
 
 Creates a DSL to play with the AWS S3, RDS and IAM services.
 
+## Concerns
+
+### Where to store sensitive data?
+
+The AWS CLI stores sensitive data in the `~/.aws/credentials` file.
+The AWS CLI also stores data in the `~/.aws/config` file.
+The AWS CLI also looks for certain environment variables, such as `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION`.
+
+I am trying to understand the best way to retrieve this information so as to not store it in code.
+
+These are the best practices for accessing data in the `~/.aws/credentials` file:
+
+  1. Use the AWS CLI to access the data.
+  2. Use the AWS SDK to access the data.
+  3. Use the AWS CLI to access the data and then use the AWS SDK to access the data.
+
+Example of accessing using the SDK:
+
+```javascript
+const AWS = require('aws-sdk');
+const credentials = new AWS.SharedIniFileCredentials({profile: 'default'});
+AWS.config.credentials = credentials;
+```
+
 ## Commands
 
 * bucket-create

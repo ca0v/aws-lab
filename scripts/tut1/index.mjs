@@ -1,5 +1,5 @@
 import AWS from "aws-sdk"
-import { createConnection } from "../../access_keys/create_connection.mjs"
+import { createConnection } from "../create_connection.mjs"
 
 const s3 = new AWS.S3()
 const iam = new AWS.IAM()
@@ -229,16 +229,23 @@ class AwsFacade {
 
 const api = new AwsFacade()
 
+class ArgReader {
+  index = 2
+  read() {
+    return process.argv[this.index++]
+  }
+}
+
 async function main() {
-  const noun = process.argv[2]
-  const verb = process.argv[3]
+  const argReader = new ArgReader()
+  const [noun, verb] = (argReader.read() || "").split("-")
 
   const commands = [
     {
       noun: "bucket",
       verbs: {
         create: async () => {
-          const bucketName = process.argv[4]
+          const bucketName = argReader.read()
           if (!bucketName) {
             console.log("Please provide a bucket name")
             return
@@ -250,8 +257,8 @@ async function main() {
           console.log({ buckets })
         },
         "add-file": async () => {
-          const bucketName = process.argv[4]
-          const fileName = process.argv[5]
+          const bucketName = argReader.read()
+          const fileName = argReader.read()
           if (!bucketName) {
             console.log("Please provide a bucket name")
             return
@@ -264,7 +271,7 @@ async function main() {
           await api.addFileToBucket(bucketName, fileName, fileContent)
         },
         "list-files": async () => {
-          const bucketName = process.argv[4]
+          const bucketName = argReader.read()
           if (!bucketName) {
             console.log("Please provide a bucket name")
             return
@@ -273,8 +280,8 @@ async function main() {
           console.log({ files })
         },
         "show-file": async () => {
-          const bucketName = process.argv[4]
-          const fileName = process.argv[5]
+          const bucketName = argReader.read()
+          const fileName = argReader.read()
           if (!bucketName) {
             console.log("Please provide a bucket name")
             return
@@ -305,18 +312,18 @@ async function main() {
           console.log(JSON.stringify(users, null, "  "))
         },
         "revoke-access": async () => {
-          const user = process.argv[4]
+          const user = argReader.read()
           if (!user) {
             console.log("Please provide a user name")
             return
           }
-          const bucket = process.argv[5]
+          const bucket = argReader.read()
           if (!bucket) {
             console.log("Please provide a bucket name")
             return
           }
 
-          const file = process.argv[6]
+          const file = argReader.read()
           if (!file) {
             console.log("Please provide a file name")
             return
@@ -324,18 +331,18 @@ async function main() {
           await api.revokeAccessToFile(user, bucket, file)
         },
         "grant-access": async () => {
-          const user = process.argv[4]
+          const user = argReader.read()
           if (!user) {
             console.log("Please provide a user name")
             return
           }
-          const bucket = process.argv[5]
+          const bucket = argReader.read()
           if (!bucket) {
             console.log("Please provide a bucket name")
             return
           }
 
-          const file = process.argv[6]
+          const file = argReader.read()
           if (!file) {
             console.log("Please provide a file name")
             return
@@ -374,7 +381,11 @@ async function main() {
   const doit = command.verbs[verb]
   if (!doit) {
     console.log(`Unknown verb: ${verb || ""}`)
-    console.log(`try one of these: ${Object.keys(command.verbs).join(", ")}`)
+    console.log(
+      `try one of these: ${Object.keys(command.verbs)
+        .map((v) => `${noun}-${v}`)
+        .join(", ")}`
+    )
     return
   }
 
