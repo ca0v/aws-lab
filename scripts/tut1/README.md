@@ -1,0 +1,64 @@
+# Tutorial 1: Getting Started
+
+Creates a DSL to play with the AWS S3, RDS and IAM services.
+
+## Commands
+
+* bucket-create
+* bucket-list
+* bucket-add-file
+* bucket-list-files
+* bucket-show-file
+* database-query
+* user-list
+* user-revoke-access
+* user-grant-access
+
+These commands are implemented in [index.mjs](./index.mjs) and used Copilot to generate it.
+
+The AWS CLI should be used to perform these tasks.
+
+## TODO For this Tutorial
+
+* Integrate with AWS Lambda
+  * Create a lambda function
+  * Create a REST API to access the lambda function
+  * Apply access control to the REST API
+
+## Future Tuts
+
+### Explore AWS API Gateway (see [this](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html))
+
+The AWS API Gateway is a service that allows you to create REST APIs that can be used to access AWS Lambda functions.
+
+### Explore AWS CloudFormation (see [this](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html))
+
+The AWS CloudFormation is a service that allows you to create templates that can be used to create AWS resources.
+
+### Explore AWS CloudWatch (see [this](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html))
+
+The AWS CloudWatch is a service that allows you to monitor AWS resources.
+
+### Explore AWS CloudTrail (see [this](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html))
+
+The AWS CloudTrail is a service that allows you to monitor AWS API calls.
+
+### Explore AWS CloudFront (see [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html))
+
+The AWS CloudFront is a service that allows you to create a CDN.
+
+### Explore AWS CloudSearch (see [this](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/what-is-cloudsearch.html))
+
+The AWS CloudSearch is a service that allows you to create a search engine.
+
+### Explore AWS CloudHSM (see [this](https://docs.aws.amazon.com/cloudhsm/latest/userguide/what-is-cloudhsm.html))
+
+The AWS CloudHSM is a service that allows you to create a hardware security module.
+
+### Explore AWS Cloud9 (see [this](https://docs.aws.amazon.com/cloud9/latest/user-guide/welcome.html))
+
+The AWS Cloud9 is a service that allows you to create a cloud-based IDE.
+
+### Explore AWS CloudDirectory (see [this](https://docs.aws.amazon.com/clouddirectory/latest/developerguide/what_is_cloud_directory.html))
+
+The AWS CloudDirectory is a service that allows you to create a cloud-based directory.

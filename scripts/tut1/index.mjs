@@ -180,6 +180,24 @@ class AwsFacade {
   }
 
   /**
+   * @param {string} user
+   * @param {any} bucket
+   * @param {any} file
+   */
+  async revokeAccessToFile(user, bucket, file) {
+    return this.applyPolicyToUser(user, bucket, {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Sid: "PermissionForObjectOperations",
+          Effect: "Deny",
+          Action: ["s3:PutObject"],
+          Resource: [`arn:aws:s3:::${bucket}/${file}`],
+        },
+      ],
+    })
+  }
+  /**
    * @param {string} userName
    * @param {any} bucket
    * @param {{Version: string;Statement: {Sid: string;Effect: string;Action: string[];Resource: string[];}[];}} policy
@@ -286,6 +304,25 @@ async function main() {
           const users = await api.listUsers()
           console.log(JSON.stringify(users, null, "  "))
         },
+        "revoke-access": async () => {
+          const user = process.argv[4]
+          if (!user) {
+            console.log("Please provide a user name")
+            return
+          }
+          const bucket = process.argv[5]
+          if (!bucket) {
+            console.log("Please provide a bucket name")
+            return
+          }
+
+          const file = process.argv[6]
+          if (!file) {
+            console.log("Please provide a file name")
+            return
+          }
+          await api.revokeAccessToFile(user, bucket, file)
+        },
         "grant-access": async () => {
           const user = process.argv[4]
           if (!user) {
@@ -308,6 +345,23 @@ async function main() {
       },
     },
   ]
+
+  // print help
+  if (!noun) {
+    console.log("Please provide a noun")
+    console.log(
+      `try one of these:\n${commands
+        .map((c) => {
+          const noun = c.noun
+          const verbs = Object.keys(c.verbs)
+          const returnCommand = verbs.map((v) => `${noun}-${v}\n`).join("")
+          return returnCommand
+        })
+        .sort()
+        .join("")}`
+    )
+    return
+  }
 
   const command = commands.find((c) => c.noun === noun)
   if (!command) {

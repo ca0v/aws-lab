@@ -14,6 +14,10 @@ Here I track my learning progress in Amazon Web Services.
 
 * Created an S3 Bucket
 * Wrote code to read and write "notes.txt" to the S3 bucket
+* CLI to view content of a bucket object notes.txt:
+
+    >aws s3api get-object --bucket ca0v0001 --key notes.txt notes.txt
+    >aws --profile corey_01 s3api get-object --bucket ca0v0005 --key test.txt test.txt
 
 ### S3 Concepts
 
